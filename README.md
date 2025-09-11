@@ -6,7 +6,7 @@ Systematic review + meta-analysis of machine learning and deep learning methods 
 This repo hosts reproducible workflows in **R** and **Python** for data extraction, cleaning, meta-analysis, and visualization.
 
 **OSF preregistration**  
-📄 Registered Protocol: [Add OSF link here]
+📄 Registered Protocol: https://osf.io/h3p6x
 
 ---
 
@@ -29,4 +29,4 @@ This repo hosts reproducible workflows in **R** and **Python** for data extracti
 ---
 
 ## 📜 License
-MIT License (code) + CC-BY 4.0 (text & docs)
+MIT License
