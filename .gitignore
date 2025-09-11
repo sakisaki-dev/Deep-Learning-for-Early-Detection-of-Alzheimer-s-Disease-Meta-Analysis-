@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+.env/
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+renv/library/
+
+# Data 
+data_raw/
+data_clean/
+
+# Jupyter/Notebooks
+.ipynb_checkpoints/
+
+# macOS / IDEs
+.DS_Store
+.vscode/
+.idea/
+
+# Logs
+*.log
