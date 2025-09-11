@@ -1,0 +1,21 @@
+name: alzheimers-ml
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pandas
+  - numpy
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - jupyterlab
+  - pip:
+    - torch
+    - tensorflow
+    - transformers
+    - joblib
+    - tqdm
+    - openpyxl
+    - notebook
