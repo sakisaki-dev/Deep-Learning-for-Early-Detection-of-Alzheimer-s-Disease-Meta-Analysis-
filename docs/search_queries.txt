@@ -1,0 +1,18 @@
+PubMed: (242 Results)
+    Search Query: ("Alzheimer Disease"[MeSH Terms] OR Alzheimer*[Title/Abstract]) AND ("deep learning"[Title/Abstract] OR "machine learning"[Title/Abstract] OR "artificial intelligence"[Title/Abstract]) AND (diagnosis[Title/Abstract] OR detection[Title/Abstract] OR prediction[Title/Abstract])
+    Filters:
+        Language: English 
+        Species: Humans
+        Publication Date: 10 years
+        Article Filters: Clinical Trial Phase I-IV, Meta-Analysis, Systematic Review, Randomized Control Trial, Review
+
+
+IEEE Xplore: (212 Results)  
+    Search Query:  ("Alzheimer" OR "Alzheimer's disease") AND ("deep learning" OR "machine learning" OR "artificial intelligence")
+    Filters:
+        Article Filters: Journals, Alzheimer’s Disease, Convolutional Neural Network, Deep Learning, Neural Network, Diagnosis Of Alzheimer’s Disease, Machine Learning, Convolutional Layers, Alzheimer’s Disease Classification, Deep Learning Models, Deep Neural Network
+        Publication Range: 2020 - 2025 (5 years)
+
+arxiv: (1 result)
+    Search Query: Alzheimers Machine Learning Deep learning Diagnosis Prediction
+    ** Returned only one result but still relevant
