@@ -35,10 +35,10 @@ Primary: Summarize and meta-analyze the diagnostic performance of ML/DL models f
 - Search terms (example): ("Alzheimer*" OR "MCI") AND ("machine learning" OR "deep learning" OR "CNN" OR "random forest" OR "SVM") AND ("accuracy" OR "AUC" OR "sensitivity" OR "specificity")
 
 ## Data extraction
-- Study metadata, population, sample sizes, model type, input modality (MRI/PET/CSF), training/validation method, reported metrics and 2×2 confusion table if available.
+- Author, instiution, year, model type, model name, sample size, AUC-ROC, external validation(y/n), diagnosis or prognosis, additional comments
+Optional Metrics [If Provided]:
+    - Sensitivity, F1, Specificity
 
-## Risk of bias
-- Use QUADAS-2 or a diagnostic model risk tool; record applicability concerns.
 
 ## Data synthesis / ML specifics
 - For AUCs: random-effects meta-analysis (metafor)
@@ -47,7 +47,7 @@ Primary: Summarize and meta-analyze the diagnostic performance of ML/DL models f
 
 ## Performance metrics
 - Primary: AUC-ROC
-- Secondary: sensitivity, specificity, F1, calibration
+- Secondary: sensitivity, specificity, F1
 
 ## Reproducibility & data sharing
 - Code: GitHub repository
