@@ -1,7 +1,3 @@
-# ===============================
-# Deep Learning for AD — Analysis (Zoomed Scales)
-# ===============================
-
 # ---- 0) Packages ----
 req <- c("tidyverse","readr","janitor","stringr","scales","viridis",
          "metafor","GGally")
@@ -107,15 +103,15 @@ compute_zoom <- function(x, pad = 0.005, min_span = 0.06, hard = c(0.80, 1.00)) 
   }
   c(lo, hi)
 }
-auc_zoom <- compute_zoom(df$auc_roc)  # dynamic AUC axis
-ss_zoom  <- compute_zoom(df$sample_size_total / max(df$sample_size_total, na.rm=TRUE)) # not used directly
+auc_zoom <- compute_zoom(df$auc_roc)  
+ss_zoom  <- compute_zoom(df$sample_size_total / max(df$sample_size_total, na.rm=TRUE)) 
 
 # ---- 3) Meta-analysis of AUC (random-effects, logit) ----
 dat_meta <- df %>%
   filter(!is.na(auc_roc), !is.na(sample_size_total), sample_size_total > 3) %>%
   mutate(
-    auc_clip    = pmin(pmax(auc_roc, 0.001), 0.999),  # avoid 0/1
-    yi          = qlogis(auc_clip),                   # logit(AUC)
+    auc_clip    = pmin(pmax(auc_roc, 0.001), 0.999),  
+    yi          = qlogis(auc_clip),                   
     vi          = 1 / (sample_size_total * auc_clip * (1 - auc_clip)),
     first_author= str_trim(str_extract(author_year_institution, "^[^,]+")),
     short_label = dplyr::coalesce(
@@ -136,10 +132,10 @@ if (!is.null(res)) {
   op <- par(mar = c(4,4,1,1))
   forest(res,
          slab    = dat_meta$short_label,
-         transf  = transf.ilogit,           # show AUC
+         transf  = transf.ilogit,           
          xlab    = "AUC",
          refline = 0.5,
-         alim    = auc_zoom,                # << zoom the x-axis
+         alim    = auc_zoom,                
          at      = seq(auc_zoom[1], auc_zoom[2], by = 0.02),
          cex     = 0.72)
   par(op); dev.off()
@@ -175,7 +171,7 @@ p1 <- df %>%
   mutate(model_type = fct_reorder(model_type, auc_roc, .fun = median, na.rm = TRUE)) %>%
   ggplot(aes(x = model_type, y = auc_roc, fill = model_type)) +
   geom_boxplot(outlier.alpha = 0.4, width = 0.7) +
-  coord_cartesian(ylim = auc_zoom) +                      # << zoom
+  coord_cartesian(ylim = auc_zoom) +                      
   scale_y_continuous(breaks = seq(auc_zoom[1], auc_zoom[2], by = 0.01),
                      labels = number_format(accuracy = 0.001)) +
   theme_minimal(base_size = 12) + theme(legend.position = "none") +
@@ -189,7 +185,7 @@ p2 <- df %>%
   ggplot(aes(x = modality, y = auc_roc, fill = modality)) +
   geom_violin(trim = FALSE, alpha = 0.7) +
   geom_boxplot(width = 0.18, outlier.alpha = 0.3) +
-  coord_cartesian(ylim = auc_zoom) +                      # << zoom
+  coord_cartesian(ylim = auc_zoom) +                      
   scale_y_continuous(breaks = seq(auc_zoom[1], auc_zoom[2], by = 0.01),
                      labels = number_format(accuracy = 0.001)) +
   theme_minimal(base_size = 12) + theme(legend.position = "none") +
@@ -202,14 +198,14 @@ p3 <- df %>%
   ggplot(aes(x = sample_size_total, y = auc_roc, color = modality)) +
   geom_point(alpha = 0.85) +
   geom_smooth(method = "lm", se = FALSE, color = "black") +
-  scale_x_log10(labels = safe_label_si(accuracy = 1)) + # << log scale
-  coord_cartesian(ylim = auc_zoom) +                      # << zoom
+  scale_x_log10(labels = safe_label_si(accuracy = 1)) + 
+  coord_cartesian(ylim = auc_zoom) +                      
   theme_minimal(base_size = 12) +
   labs(title = "Relationship Between Sample Size (log10) and AUC",
        x = "Sample Size (log10)", y = "AUC", color = "Modality")
 ggsave(file.path(figdir, "sample_vs_auc.png"), p3, width = 10, height = 6, dpi = 200)
 
-# ---- 7) Heatmap: mean AUC by Model x Modality (centered on global mean) ----
+# ---- 7) Heatmap: mean AUC by Model x Modality ----
 global_mean <- mean(df$auc_roc, na.rm = TRUE)
 heat_data <- df %>%
   filter(!is.na(auc_roc), !is.na(model_type), !is.na(modality)) %>%
@@ -232,7 +228,7 @@ p5 <- df %>%
   ggplot(aes(x = year, y = auc_roc)) +
   geom_point(alpha = 0.85) +
   geom_smooth(se = FALSE) +
-  coord_cartesian(ylim = auc_zoom) +                      # << zoom
+  coord_cartesian(ylim = auc_zoom) +                      
   scale_y_continuous(labels = number_format(accuracy = 0.001)) +
   theme_minimal(base_size = 12) +
   labs(title = "AUC Over Time (Zoomed)", x = "Publication Year", y = "AUC")
@@ -247,23 +243,14 @@ p6 <- df %>%
   ggplot(aes(x = specificity, y = sensitivity, color = model_type)) +
   geom_point(size = 3, alpha = 0.9) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey50") +
-  coord_cartesian(xlim = spec_zoom, ylim = sens_zoom) +   # << zoom both axes
+  coord_cartesian(xlim = spec_zoom, ylim = sens_zoom) +   
   theme_minimal(base_size = 12) +
   labs(title = "Sensitivity vs Specificity (Zoomed)", x = "Specificity", y = "Sensitivity",
        color = "Model Type")
 ggsave(file.path(figdir, "sens_spec_plot.png"), p6, width = 10, height = 6, dpi = 200)
 
-# ---- 11) Quality plot (only if present) ----
-if("quality_rating" %in% names(df) && any(!is.na(df$quality_rating) & df$quality_rating!="")){
-  p7 <- df %>%
-    filter(!is.na(quality_rating), quality_rating!="") %>%
-    ggplot(aes(x = quality_rating, fill = quality_rating)) +
-    geom_bar() + theme_minimal(base_size = 12) + theme(legend.position = "none") +
-    labs(title = "Quality Assessment of Included Studies", x = "Quality Rating", y = "Count")
-  ggsave(file.path(figdir, "quality_barplot.png"), p7, width = 8, height = 5, dpi = 200)
-}
 
-# ---- 12) Correlation matrix ----
+# ---- 11) Correlation matrix ----
 corr_df <- df %>%
   transmute(AUC = auc_roc, Sensitivity = sensitivity, Specificity = specificity, F1 = f1_precision_num)
 png(file.path(figdir, "correlation_matrix.png"), width = 1200, height = 1000, res = 170)
@@ -271,13 +258,5 @@ print(GGally::ggpairs(corr_df))
 dev.off()
 
 
-# ---- Console summary ----
-if(!is.null(res)){
-  cat("\nRandom-effects meta-analysis (logit AUC):\n")
-  print(res)
-  cat("\nPooled AUC (back-transformed):\n")
-  cat(round(transf.ilogit(coef(res)), 4), " (95% CI ",
-      round(transf.ilogit(res$ci.lb),4), "–",
-      round(transf.ilogit(res$ci.ub),4), ")\n", sep = "")
-}
+# ---- Success Message ----
 cat("\nSaved figures to: ", normalizePath(figdir), "\n")

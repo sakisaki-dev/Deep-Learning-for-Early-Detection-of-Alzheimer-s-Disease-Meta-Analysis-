@@ -1,16 +1,12 @@
-# Set CRAN mirror
 options(repos = c(CRAN = "https://cloud.r-project.org"))
 
-# Packages to install from CRAN
 cran_packages <- c("metafor", "mada", "readr", "dplyr", "tidyr", "ggplot2")
 
-# Check for and install missing CRAN packages
 to_install <- setdiff(cran_packages, rownames(installed.packages()))
 if(length(to_install)) {
   install.packages(to_install)
 }
 
-# Install GitHub package for dmetar if not already installed
 if (!requireNamespace("dmetar", quietly = TRUE)) {
   if (!requireNamespace("remotes", quietly = TRUE)) {
     install.packages("remotes")
@@ -25,7 +21,7 @@ if (!requireNamespace("renv", quietly = TRUE)) {
 # Uncomment the next line to initialize renv lockfile interactively
 # renv::init()
 
-# Check versions of installed packages
+# Check versions of installed package
 lapply(c(cran_packages, "dmetar"), function(pkg) {
   if(requireNamespace(pkg, quietly = TRUE)) {
     cat(pkg, "version:", as.character(packageVersion(pkg)), "\n")
