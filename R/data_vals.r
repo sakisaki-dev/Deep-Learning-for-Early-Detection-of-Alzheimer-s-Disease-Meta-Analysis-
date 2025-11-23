@@ -114,6 +114,137 @@ desc_stats <- df %>%
     n_f1      = sum(!is.na(f1_precision_num))
   )
 
+
+
+
+# =========================
+# S3 — Sensitivity Analyses
+# (drop-in; uses your existing `df`)
+# =========================
+
+suppressPackageStartupMessages(library(metafor))
+suppressPackageStartupMessages(library(dplyr))
+
+# If you already have figdir defined, great; otherwise set a safe default
+if (!exists("figdir")) figdir <- "alz-meta/R/generated_plots"
+if (!dir.exists(figdir)) dir.create(figdir, recursive = TRUE, showWarnings = FALSE)
+out_csv <- file.path(figdir, "S3_sensitivity_summary.csv")
+out_tex <- file.path(figdir, "Table_S3_1_sensitivity.tex")
+
+# ---- Base meta-analysis dataset (matches your pipeline) ----
+base_dat <- df %>%
+  filter(!is.na(auc_roc), auc_roc > 0 & auc_roc < 1,
+         !is.na(sample_size_total), sample_size_total > 3) %>%
+  mutate(
+    p_clip   = pmin(pmax(auc_roc, 0.001), 0.999),
+    yi_logit = qlogis(p_clip),                                      # effect on logit(AUC)
+    vi_logit = 1 / (sample_size_total * p_clip * (1 - p_clip)),     # delta-method var (logit)
+    vi_raw   = (p_clip * (1 - p_clip)) / sample_size_total          # delta-method var (raw AUC)
+  )
+
+stopifnot(nrow(base_dat) >= 3)
+
+# ---- Helper to summarize metafor fits and back-transform ----
+summarize_fit <- function(res, scale = c("logit","raw")) {
+  scale <- match.arg(scale)
+  k    <- res$k
+  Q    <- unname(res$QE)
+  tau2 <- ifelse(is.null(res$tau2), 0, unname(res$tau2))
+  I2   <- if (is.finite(Q) && k > 1 && Q > 0) max(0, (Q - (k - 1)) / Q) * 100 else NA_real_
+  
+  if (scale == "logit") {
+    pr <- try(predict(res, transf = transf.ilogit), silent = TRUE)
+    if (inherits(pr, "try-error")) {
+      est <- plogis(res$b); lo <- plogis(res$ci.lb); hi <- plogis(res$ci.ub)
+      se  <- res$se
+      pi_lo <- plogis(as.numeric(res$b) - 1.96 * sqrt(se^2 + tau2))
+      pi_hi <- plogis(as.numeric(res$b) + 1.96 * sqrt(se^2 + tau2))
+    } else {
+      est <- unname(pr$pred); lo <- unname(pr$ci.lb); hi <- unname(pr$ci.ub)
+      if (is.null(pr$pi.lb) || is.na(pr$pi.lb)) {
+        se <- res$se
+        pi_lo <- plogis(as.numeric(res$b) - 1.96 * sqrt(se^2 + tau2))
+        pi_hi <- plogis(as.numeric(res$b) + 1.96 * sqrt(se^2 + tau2))
+      } else {
+        pi_lo <- unname(pr$pi.lb); pi_hi <- unname(pr$pi.ub)
+      }
+    }
+  } else { # raw scale
+    pr <- try(predict(res), silent = TRUE)
+    est <- if (inherits(pr, "try-error")) as.numeric(res$b) else unname(pr$pred)
+    lo  <- if (inherits(pr, "try-error")) as.numeric(res$ci.lb) else unname(pr$ci.lb)
+    hi  <- if (inherits(pr, "try-error")) as.numeric(res$ci.ub) else unname(pr$ci.ub)
+    se  <- res$se
+    pi_lo <- as.numeric(res$b) - 1.96 * sqrt(se^2 + tau2)
+    pi_hi <- as.numeric(res$b) + 1.96 * sqrt(se^2 + tau2)
+  }
+  
+  tibble(
+    k = k,
+    pooled_auc = as.numeric(est),
+    ci_lo = as.numeric(lo),
+    ci_hi = as.numeric(hi),
+    pred_lo = as.numeric(pi_lo),
+    pred_hi = as.numeric(pi_hi),
+    tau2 = tau2,
+    Q = Q,
+    I2 = I2
+  )
+}
+
+# ---- Run the four analyses ----
+
+# 1) Fixed-effects (logit)
+res_FE  <- rma(yi = yi_logit, vi = vi_logit, data = base_dat, method = "FE")
+sum_FE  <- summarize_fit(res_FE, scale = "logit") %>% mutate(analysis = "Fixed-effects (logit)")
+
+# 2) REML (logit)
+res_RE  <- rma(yi = yi_logit, vi = vi_logit, data = base_dat, method = "REML")
+sum_RE  <- summarize_fit(res_RE, scale = "logit") %>% mutate(analysis = "REML (logit)")
+
+# 3) Excluding AUC >= 0.99 (REML, logit)
+dat_no99 <- base_dat %>% filter(p_clip < 0.99)
+if (nrow(dat_no99) >= 3) {
+  res_no99 <- rma(yi = yi_logit, vi = vi_logit, data = dat_no99, method = "REML")
+  sum_no99 <- summarize_fit(res_no99, scale = "logit") %>% mutate(analysis = "REML (logit), exclude AUC≥0.99")
+} else {
+  sum_no99 <- tibble(analysis = "REML (logit), exclude AUC≥0.99", k = nrow(dat_no99),
+                     pooled_auc = NA_real_, ci_lo = NA_real_, ci_hi = NA_real_,
+                     pred_lo = NA_real_, pred_hi = NA_real_, tau2 = NA_real_, Q = NA_real_, I2 = NA_real_)
+}
+
+# 4) External-validation only (REML, logit)
+dat_ext <- base_dat %>% filter(external_validation == "Yes")
+if (nrow(dat_ext) >= 3) {
+  res_ext <- rma(yi = yi_logit, vi = vi_logit, data = dat_ext, method = "REML")
+  sum_ext <- summarize_fit(res_ext, scale = "logit") %>% mutate(analysis = "REML (logit), external-only (Yes)")
+} else {
+  sum_ext <- tibble(analysis = "REML (logit), external-only (Yes)", k = nrow(dat_ext),
+                    pooled_auc = NA_real_, ci_lo = NA_real_, ci_hi = NA_real_,
+                    pred_lo = NA_real_, pred_hi = NA_real_, tau2 = NA_real_, Q = NA_real_, I2 = NA_real_)
+}
+
+# 5) RAW AUC scale (REML)
+res_raw <- rma(yi = p_clip, vi = vi_raw, data = base_dat, method = "REML")
+sum_raw <- summarize_fit(res_raw, scale = "raw") %>% mutate(analysis = "REML (raw AUC scale)")
+
+# ---- Collect, save, and print LaTeX-ready lines ----
+S3_table <- bind_rows(sum_FE, sum_RE, sum_no99, sum_ext, sum_raw) %>%
+  select(analysis, k, pooled_auc, ci_lo, ci_hi, pred_lo, pred_hi, tau2, Q, I2)
+
+write.csv(S3_table, out_csv, row.names = FALSE)
+cat("\nSaved S3 sensitivity summary to:", normalizePath(out_csv), "\n\n")
+
+rnd3 <- function(x) ifelse(is.na(x), "NA", sprintf("%.3f", x))
+
+FE_line  <- paste0("\\textbf{Fixed-effects vs REML:} pooled AUC = \\emph{",
+                   rnd3(sum_FE$pooled_auc), "} (FE) vs \\emph{", rnd3(sum_RE$pooled_auc), "} (REML).")
+no99_line<- paste0("\\textbf{Excluding AUC$\\ge$0.99:} pooled AUC = \\emph{", rnd3(sum_no99$pooled_auc), "}.")
+ext_line <- paste0("\\textbf{External-validation only:} pooled AUC = \\emph{", rnd3(sum_ext$pooled_auc), "}.")
+raw_line <- paste0("\\textbf{Raw AUC scale:} pooled AUC = \\emph{", rnd3(sum_raw$pooled_auc), "}.")
+
+cat(FE_line, "\n", no99_line, "\n", ext_line, "\n", raw_line, "\n", sep = "")
+
 # ---- 4) Output ----
 cat("\n--- Random-Effects Meta-Analysis (logit(AUC)) ---\n")
 print(res_auc)
