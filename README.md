@@ -1,32 +1,55 @@
-# Deep Learning for Early Detection of Alzheimer’s Disease:  
-## A Systematic Review and Meta-Analysis of Diagnostic Accuracy
+# Deep Learning and Machine Learning for Early Detection of Alzheimer's Disease
+## A Systematic Review and Meta-Analysis
 
-**Description**  
-Systematic review + meta-analysis of machine learning and deep learning methods for the early detection of Alzheimer’s disease.  
-This repo hosts reproducible workflows in **R** and **Python** for data extraction, cleaning, meta-analysis, and visualization.
+[![medRxiv](https://img.shields.io/badge/medRxiv-2026.05.21.26353815-blue)](https://medrxiv.org/cgi/content/short/2026.05.21.26353815v1)
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 
-**OSF preregistration**  
-📄 Registered Protocol: https://osf.io/h3p6x
+**Preprint:** https://medrxiv.org/cgi/content/short/2026.05.21.26353815v1  
+**OSF Protocol:** https://osf.io/h3p6x  
+**Author:** Saketh Machiraju · University of California, Santa Cruz
 
 ---
 
-## 📂 Repo Structure
-- `data_raw/` → raw extraction CSVs (not committed)
-- `data_clean/` → processed tables
+## Overview
+Systematic review and meta-analysis of 30 studies (2015–2025) evaluating 
+machine learning and deep learning diagnostic performance for Alzheimer's 
+disease and mild cognitive impairment. Pooled AUC of 0.962 across MRI, 
+PET, EEG, and multimodal pipelines using PRISMA 2020 guidelines and 
+random-effects meta-analysis in R.
+
+---
+
+## Key Findings
+- Pooled AUC: **0.962** (95% CI: 0.939–0.977)
+- Mean sensitivity: **0.914** · Mean specificity: **0.913**
+- DL+MRI most validated pairing (AUC 0.956, n=11 studies)
+- Publication bias confirmed via Egger's test (p=0.0003)
+
+---
+
+## Repo Structure
+- `data_clean/` → processed extraction tables
 - `analysis/` → R and Python analysis scripts
-- `figures/` → generated plots and meta-analysis outputs
-- `docs/` → protocol, notes, OSF_link.txt
-- `notebooks/` → exploratory Jupyter/R notebooks
-- `scripts/` → utility scripts
+- `figures/` → forest plots, funnel plots, heatmaps
+- `docs/` → protocol and OSF registration
 
 ---
 
-## ⚙️ Reproducibility
-- `requirements.txt` (Python dependencies)
-- `environment.yml` (optional, Conda environment file)
-- `R/install_packages.R` (R dependencies: metafor, mada, dmetar)
+## Reproducibility
+- R dependencies: `metafor`, `tidyverse`, `GGally`, `viridis`
+- Python dependencies: `requirements.txt`
+- R setup: `R/install_packages.R`
 
 ---
 
-## 📜 License
-MIT License
+## Citation
+If you use this work, please cite:
+
+Machiraju, S. (2026). Deep Learning and Machine Learning for Early 
+Detection of Alzheimer's Disease: A Systematic Review and Meta-Analysis. 
+*medRxiv*. https://doi.org/10.64898/2026.05.21.26353815
+
+---
+
+## License
+CC BY 4.0 — free to share and adapt with attribution
